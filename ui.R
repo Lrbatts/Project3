@@ -1,6 +1,8 @@
 library(shinydashboard)
 library(shiny)
-
+library(tidyverse)
+mjdata <- read_csv("mjdata.csv")
+vars <- mjdata %>% select("PTS","TRB","AST","GmSc","FG_PCT") %>% names
 shinyUI(fluidPage(
   dashboardPage(
   dashboardHeader(title = "Project 3 Landon Batts"),
@@ -25,9 +27,48 @@ shinyUI(fluidPage(
           imageOutput("mj_img")
           )
     )
-  )
+  ),
+      tabItem(tabName="dataexplore",
+              sidebarLayout(
+                sidebarPanel(
+                radioButtons("numtype","Type of Numeric Summary", choices=c("One Variable Summary","Correlation/Covariance with Win"),selected="One Variable Summary"),
+                radioButtons("graphtype", "Type of Graphical Summary", choices=c("Histogram","Boxplot","Scatter Plot"),selected="Histogram"),
+                selectInput("var1","Variable",choices=c("Points","Rebounds","Assists","Game Score","Field Goal Pct")),
+                conditionalPanel(condition="input.graphtype=='Scatter Plot'", 
+                                 selectInput("var2","Scatter X",vars)),
+                conditionalPanel(condition="input.graphtype=='Scatter Plot'", 
+                                 selectInput("var3","Scatter Y",vars))),
+              
+              mainPanel(
+                conditionalPanel(condition="input.numtype=='One Variable Summary'", tableOutput("numsum")),
+                conditionalPanel(condition="input.numtype=='Correlation/Covariance with Win'", tableOutput("corr")),
+                conditionalPanel(condition="input.graphtype=='Histogram'", plotOutput("hist")),
+                conditionalPanel(condition="input.graphtype=='Boxplot'", plotOutput("box")),
+                conditionalPanel(condition="input.graphtype=='Scatter Plot'", plotOutput("scatter"))
+              ))
+),
+      tabItem(tabName = "model",
+              tabsetPanel(
+                                      tabPanel("Modeling Info",
+                                      box(title="Logistic Model for Wins",
+                                          p("Description of logistic model")),
+                                      box(title="Regression Tree",
+                                          p("Description of regression tree")),
+                                      box(title="Random Forest Model",
+                                          p("Description of Random Forest"))),
+                                      tabPanel("Model Fitting",
+                                               sidebarLayout(sidebarPanel(
+                                                 sliderInput("train",label="Training Set Split", min=0, max=100,value=80), 
+                                                 selectInput("selectvar", label="Select Variables",choices=vars,multiple=TRUE, selected=vars)
+                                               ),
+                                               mainPanel())),
+                                      tabPanel("Prediction"))
+              ),
+      tabItem(tabName = "data",
+              dataTableOutput("mj"))
 )
 )
 )
 ))
+
 
