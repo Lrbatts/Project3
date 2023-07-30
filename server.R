@@ -3,10 +3,14 @@ library(shinydashboard)
 library(psych)
 library(ggplot2)
 library(tidyverse)
-
-shinyServer(function(input,output){
+library(caret)
+library(tree)
+library(randomForest)
+shinyServer(function(input,output,session){
   
   mjdata <- read_csv("mjdata.csv")
+  vars <- mjdata %>% select("PTS","TRB","AST","GmSc","FG_PCT","Win") 
+  vars$Win <- as.factor(vars$Win)
   
   output$mj_img <- renderImage({
     list(src="www/michael-jordan-png-10671.png",
@@ -94,7 +98,88 @@ shinyServer(function(input,output){
     plot(scatterdata())
   })
   
+  inputdata <- eventReactive(input$submit,{
+    vars
+  })
+  
+  modelinput <- eventReactive(input$submit,{
+    if (is.null(input$selectvar)) {
+      dt <- vars
+    }
+    else{
+      dt <- vars[, c(input$selectvar,'Win')]
+    }
+  })
+  
+  datasplit <- eventReactive(input$submit,{
+    input$train / 100
+  })
+  
+  set.seed(123)
+  trainIndex <- eventReactive(input$submit,{
+    sample(1:nrow(modelinput()),
+           datasplit() * nrow(modelinput()))
+  })
+  
+  mjtrain <- eventReactive(input$submit,{
+    tmptrain <- modelinput()
+    tmptrain[trainIndex(),]
+  })
+  
+  mjtest <- eventReactive(input$submit,{
+    tmptest <- modelinput()
+    tmptest[-trainIndex(),]
+  })
+  
+  f <- eventReactive(input$submit,{
+    as.formula(paste('Win' ,"~."))
+  })
+  
+  logfit <- eventReactive(input$submit,{
+    train(f(), data=mjtrain(), 
+                  method="glm",
+                  family="binomial",
+                  preProcess=c("center","scale"),
+                  trControl=trainControl(method="cv",number=5))
+  })
+  
+  
+  output$logmodel <- renderPrint(
+    logfit())
+   
+  output$logsum <- renderPrint(
+    summary(logfit())
+  )
+  
+  fittree <- eventReactive(input$submit,{
+    tree(f(),data=mjtrain(),split="deviance")
+  }) 
+  
+  treepred <- eventReactive(input$submit,{
+    - predict(fittree(), dplyr::select(mjtest()), type = "class")
+  })
+  
+  
+  output$treestat <- renderPrint(
+    fittree()
+  )
+  output$treemodel <- renderPrint(
+    summary(fittree())
+  )
+
+  rfmodel <- eventReactive(input$submit,{
+    randomForest(f(),data=mjtrain(),mtry=ncol(mjtrain())/3,ntree=200,importance=TRUE)
+  })
+  
+  output$rfmodel <- renderPrint({
+    rfmodel()
+  })
+
+  output$rfplot <- renderPrint({
+    importance(rfmodel())
+  })
+
   output$mj <- renderDataTable({
     mjdata
   })
-      })
+  })

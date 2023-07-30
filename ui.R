@@ -2,7 +2,8 @@ library(shinydashboard)
 library(shiny)
 library(tidyverse)
 mjdata <- read_csv("mjdata.csv")
-vars <- mjdata %>% select("PTS","TRB","AST","GmSc","FG_PCT") %>% names
+vars <- mjdata %>% select("PTS","TRB","AST","GmSc","FG_PCT","Win")
+vars$Win <- as.factor(vars$Win)
 shinyUI(fluidPage(
   dashboardPage(
   dashboardHeader(title = "Project 3 Landon Batts"),
@@ -35,9 +36,9 @@ shinyUI(fluidPage(
                 radioButtons("graphtype", "Type of Graphical Summary", choices=c("Histogram","Boxplot","Scatter Plot"),selected="Histogram"),
                 selectInput("var1","Variable",choices=c("Points","Rebounds","Assists","Game Score","Field Goal Pct")),
                 conditionalPanel(condition="input.graphtype=='Scatter Plot'", 
-                                 selectInput("var2","Scatter X",vars)),
+                                 selectInput("var2","Scatter X",names(vars))),
                 conditionalPanel(condition="input.graphtype=='Scatter Plot'", 
-                                 selectInput("var3","Scatter Y",vars))),
+                                 selectInput("var3","Scatter Y",names(vars)))),
               
               mainPanel(
                 conditionalPanel(condition="input.numtype=='One Variable Summary'", tableOutput("numsum")),
@@ -48,25 +49,26 @@ shinyUI(fluidPage(
               ))
 ),
       tabItem(tabName = "model",
-              tabsetPanel(
-                                      tabPanel("Modeling Info",
+              mainPanel(
+              tabsetPanel(id="tabID",type="tabs",
+                                      tabPanel("Modeling Info",fluidRow(
                                       box(title="Logistic Model for Wins",
                                           p("Description of logistic model")),
                                       box(title="Regression Tree",
                                           p("Description of regression tree")),
                                       box(title="Random Forest Model",
-                                          p("Description of Random Forest"))),
-                                      tabPanel("Model Fitting",
-                                               sidebarLayout(sidebarPanel(
-                                                 sliderInput("train",label="Training Set Split", min=0, max=100,value=80), 
-                                                 selectInput("selectvar", label="Select Variables",choices=vars,multiple=TRUE, selected=vars)
-                                               ),
-                                               mainPanel())),
-                                      tabPanel("Prediction"))
+                                          p("Description of Random Forest")))),
+                                      tabPanel("Model Fitting", sidebarPanel(sliderInput("train", label = h3("Train/Test Split %"),min = 0, max = 100,value = 80),
+                                                                                selectInput("selectvar", label = "Select variables",choices = names(vars[-6]), multiple = TRUE,selected = names(vars[-6])),
+                                                                             actionButton("submit","Submit Fit")),
+                                                  mainPanel(tabsetPanel(id="tabset",
+                                               tabPanel("Logistic Regression Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("logmodel")), box(title="Model Summary", verbatimTextOutput("logsum")))),
+                                               tabPanel("Classification Tree", fluidRow(box(title="Fit Statistics", verbatimTextOutput("treestat")), box(title="Model Summary", verbatimTextOutput("treemodel")))),
+                                               tabPanel("Random Forest Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("rfmodel")), box(title="Variable Importance", verbatimTextOutput("rfplot"))))))),
+                                      tabPanel("Prediction")))
               ),
-      tabItem(tabName = "data",
-              dataTableOutput("mj"))
-)
+tabItem(tabName="data",
+        mainPanel(renderDataTable("mj"))))
 )
 )
 ))
