@@ -17,3 +17,8 @@ The purpose of this app is to analyze game-by-game statistics of Michael Jordan 
 ```{r install, eval=FALSE}
 install.packages(c("shinydashboard","shiny","psyche","tidyverse","ggplot2","caret","tree","randomForest"))
 ```
+
+#### Code To Run App Locally
+```{r install, eval=FALSE}
+shiny::runGitHub("Lrbatts/Project3")
+```
