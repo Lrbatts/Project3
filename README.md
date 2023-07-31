@@ -1,9 +1,4 @@
----
-title: "r"
-author: "Landon Batts"
-date: "2023-07-31"
-output: github_document
----
+# Project 3
 
 ### App Description
 The purpose of this app is to analyze game-by-game statistics of Michael Jordan and analyze what statistics lead to wins in the NBA. In the Data Exploration tab, you will be able to produce various numeric and graphical summaries of the data in order to analyze potential trends or relationships in the data. In the Modeling tab, you will be able to fit multiple types of learning models including logistic regression, classification trees, and a random forest model to determine which statistics lead to wins for Michael Jordan. Summary statistics are supplied for each model you fit to help you make a decision as to the best model to use. After selecting a model, you will then be able to use it to make predictions of the probability that his team won based on different combinations of statistics. A win is represented by a 1 and a loss is represented by a 0. Finally, in the data page, you will be able to actually scroll through the data set as well as subset it and save it yourself.
