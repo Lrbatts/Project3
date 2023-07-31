@@ -173,7 +173,7 @@ shinyServer(function(input,output,session){
   )
   
   treepred <- reactive({
-    predict(treefit(),newdata=mjtest())
+    predict(fittree(),newdata=mjtest())
   })
   
   output$treetest <- renderPrint({
