@@ -62,15 +62,23 @@ shinyUI(fluidPage(
                                                                                 selectInput("selectvar", label = "Select variables",choices = names(vars[-6]), multiple = TRUE,selected = names(vars[-6])),
                                                                              actionButton("submit","Submit Fit")),
                                                   mainPanel(tabsetPanel(id="tabset",
-                                               tabPanel("Logistic Regression Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("logmodel")), box(title="Model Summary", verbatimTextOutput("logsum")))),
-                                               tabPanel("Classification Tree", fluidRow(box(title="Fit Statistics", verbatimTextOutput("treestat")), box(title="Model Summary", verbatimTextOutput("treemodel")))),
-                                               tabPanel("Random Forest Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("rfmodel")), box(title="Variable Importance", verbatimTextOutput("rfplot"))))))),
-                                      tabPanel("Prediction")))
-              ),
+                                               tabPanel("Logistic Regression Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("logmodel")), box(title="Model Summary", verbatimTextOutput("logsum")),box(title="Compare To Test", verbatimTextOutput("logtest")))),
+                                               tabPanel("Classification Tree", fluidRow(box(title="Fit Statistics", verbatimTextOutput("treestat")), box(title="Model Summary", verbatimTextOutput("treemodel")),box(title="Compare To Test", verbatimTextOutput("treetest")))),
+                                               tabPanel("Random Forest Model", fluidRow(box(title="Fit Statistics",verbatimTextOutput("rfmodel")), box(title="Variable Importance", verbatimTextOutput("rfplot")),box(title="Compare To Test", verbatimTextOutput("rftest"))))))),
+                                      tabPanel("Prediction", sidebarLayout(
+                                        sidebarPanel(radioButtons("modeltype","Select Model Type",choices=c("Logistic Regression","Classification Tree","Random Forest"),selected="Logistic Regression"),
+                                        numericInput("pts","Points",min=0,max=100,value=30),
+                                        numericInput("trb","Rebounds",min=0,max=20,value=6),
+                                        numericInput("ast","Assists",min=0,max=20,value=5),
+                                        numericInput("gmsc","Game Score",min=0,max=70,value=35),
+                                        numericInput("fgpct","Field Goal Percent",min=0,max=100,value=50)),
+                                        mainPanel(verbatimTextOutput("predict")))
+                                      )))),
 tabItem(tabName="data",
-        mainPanel(renderDataTable("mj"))))
+        dataTableOutput("mj"),
+        downloadButton("downloadData", "Download"))))))
 )
-)
-))
+
+
 
 

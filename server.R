@@ -151,20 +151,35 @@ shinyServer(function(input,output,session){
     summary(logfit())
   )
   
+  logpred <- reactive({
+    predict(logfit(),newdata=mjtest())
+  })
+  
+  output$logtest <- renderPrint({
+    tmptest <- mjtest()
+    postResample(logpred(), obs = tmptest$Win)
+  }
+  )
+  
   fittree <- eventReactive(input$submit,{
     tree(f(),data=mjtrain(),split="deviance")
   }) 
-  
-  treepred <- eventReactive(input$submit,{
-    - predict(fittree(), dplyr::select(mjtest()), type = "class")
-  })
-  
   
   output$treestat <- renderPrint(
     fittree()
   )
   output$treemodel <- renderPrint(
     summary(fittree())
+  )
+  
+  treepred <- reactive({
+    predict(treefit(),newdata=mjtest())
+  })
+  
+  output$treetest <- renderPrint({
+    tmptest <- mjtest()
+    postResample(treepred(), obs = tmptest$Win)
+  }
   )
 
   rfmodel <- eventReactive(input$submit,{
@@ -178,8 +193,42 @@ shinyServer(function(input,output,session){
   output$rfplot <- renderPrint({
     importance(rfmodel())
   })
+  
+  rfpred <- reactive({
+    predict(rfmodel(),newdata=mjtest())
+  })
+  
+  output$rftest <- renderPrint({
+    tmptest <- mjtest()
+    postResample(rfpred(), obs = tmptest$Win)
+  }
+  )
 
+  preddata <- reactive({
+    data.frame(PTS=input$pts,TRB=input$trb,AST=input$ast,GmSc=input$gmsc,FG_PCT=input$fgpct/100)
+  })
+  
+  output$predict <- renderPrint({
+    if(input$modeltype=="Logistic Regression"){
+      predict(logfit(),newdata=preddata())
+    } else if(input$modeltype=="Classification Tree"){
+      predict(fittree(),newdata=preddata())
+    } else {
+      predict(rfmodel(),newdata=preddata())
+    }
+  })
+  
   output$mj <- renderDataTable({
     mjdata
   })
+  
+  output$downloadData <- downloadHandler( 
+    filename = function(){
+      paste("mjdataset.csv", sep = "")
+    },
+    
+    content = function(file) {
+      write.csv(mjdata, file, row.names = FALSE)
+    }) 
+
   })
